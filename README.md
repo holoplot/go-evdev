@@ -33,7 +33,7 @@ import "github.com/holoplot/go-evdev"
 To re-generated `pkg/codes.go` from the latest kernel headers, use the following command.
 
 ```
-go run build/gen-codes/main.go /usr/include/linux/input.h /usr/include/linux/input-event-codes.h >codes.go
+go run build/gen-codes/main.go /usr/include/linux/input.h /usr/include/linux/input-event-codes.h | gofmt >codes.go
 ```
 
 # Example
