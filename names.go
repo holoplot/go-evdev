@@ -22,26 +22,29 @@ func PropName(p EvProp) string {
 
 // CodeName returns the name of an EvfCode in the given EvType, or "UNKNOWN" of the code is not valid.
 func CodeName(t EvType, c EvCode) string {
-	names := map[EvCode]string{}
+	var name string
+	var ok bool
 
 	switch t {
 	case EV_ABS:
-		names = ABSName
+		name, ok = ABSName[c]
 	case EV_SYN:
-		names = SYNName
+		name, ok = SYNName[c]
 	case EV_KEY:
-		names = KEYName
+		name, ok = KEYName[c]
+		if !ok {
+			name, ok = BTNName[c]
+		}
 	case EV_SW:
-		names = SWName
+		name, ok = SWName[c]
 	case EV_LED:
-		names = LEDName
+		name, ok = LEDName[c]
 	case EV_SND:
-		names = SNDName
+		name, ok = SNDName[c]
 	default:
 		return "UNSUPPORTED"
 	}
 
-	name, ok := names[c]
 	if ok {
 		return name
 	}
