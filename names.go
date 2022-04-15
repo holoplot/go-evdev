@@ -2,7 +2,7 @@ package evdev
 
 // TypeName returns the name of an EvType as string, or "UNKNOWN" if the type is not valid
 func TypeName(t EvType) string {
-	name, ok := EVName[t]
+	name, ok := EVToString[t]
 	if ok {
 		return name
 	}
@@ -12,7 +12,7 @@ func TypeName(t EvType) string {
 
 // PropName returns the name of the given EvProp, or "UNKNOWN" if the property is not valid
 func PropName(p EvProp) string {
-	name, ok := PROPName[p]
+	name, ok := INPUTToString[p]
 	if ok {
 		return name
 	}
@@ -26,23 +26,30 @@ func CodeName(t EvType, c EvCode) string {
 	var ok bool
 
 	switch t {
-	case EV_ABS:
-		name, ok = ABSName[c]
 	case EV_SYN:
-		name, ok = SYNName[c]
+		name, ok = SYNToString[c]
 	case EV_KEY:
-		name, ok = KEYName[c]
-		if !ok {
-			name, ok = BTNName[c]
-		}
+		name, ok = KEYToString[c]
+	case EV_REL:
+		name, ok = RELToString[c]
+	case EV_ABS:
+		name, ok = ABSToString[c]
+	case EV_MSC:
+		name, ok = MSCToString[c]
 	case EV_SW:
-		name, ok = SWName[c]
+		name, ok = SWToString[c]
 	case EV_LED:
-		name, ok = LEDName[c]
+		name, ok = LEDToString[c]
 	case EV_SND:
-		name, ok = SNDName[c]
+		name, ok = SNDToString[c]
+	case EV_REP:
+		name, ok = REPToString[c]
+	case EV_FF:
+		name, ok = FFToString[c]
+	// case EV_PWR:
+	// case EV_FF_STATUS:
 	default:
-		return "UNSUPPORTED"
+		return "UNKNOWN"
 	}
 
 	if ok {

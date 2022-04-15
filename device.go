@@ -20,7 +20,7 @@ func Open(path string) (*InputDevice, error) {
 	d := &InputDevice{}
 
 	var err error
-	d.file, err = os.Open(path)
+	d.file, err = os.OpenFile(path, os.O_RDWR, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -204,4 +204,10 @@ func (d *InputDevice) ReadOne() (*InputEvent, error) {
 	}
 
 	return &event, nil
+}
+
+// WriteOne writes one InputEvent to the device.
+// Useful for controlling LEDs of the device
+func (d *InputDevice) WriteOne(event *InputEvent) error {
+	return binary.Write(d.file, binary.LittleEndian, event)
 }

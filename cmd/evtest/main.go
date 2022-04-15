@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	evdev "github.com/holoplot/go-evdev"
+	"github.com/holoplot/go-evdev"
 )
 
 func listDevices() {
@@ -79,31 +79,36 @@ func main() {
 		fmt.Printf("  Event type %d (%s)\n", t, evdev.TypeName(t))
 
 		state, err := d.State(t)
-		if err == nil {
-			for code, value := range state {
-				fmt.Printf("    Event code %d (%s) state %v\n", code, evdev.CodeName(t, code), value)
-			}
+		if err != nil {
+			continue
+		}
+		for code, value := range state {
+			fmt.Printf("    Event code %d (%s) state %v\n", code, evdev.CodeName(t, code), value)
 		}
 
-		if t == evdev.EV_ABS {
-			absInfos, err := d.AbsInfos()
-			if err == nil {
-				for code, absInfo := range absInfos {
-					fmt.Printf("    Event code %d (%s)\n", code, evdev.CodeName(t, code))
-					fmt.Printf("      Value: %d\n", absInfo.Value)
-					fmt.Printf("      Min: %d\n", absInfo.Minimum)
-					fmt.Printf("      Max: %d\n", absInfo.Maximum)
+		if t != evdev.EV_ABS {
+			continue
+		}
 
-					if absInfo.Fuzz != 0 {
-						fmt.Printf("      Fuzz: %d\n", absInfo.Fuzz)
-					}
-					if absInfo.Flat != 0 {
-						fmt.Printf("      Flat: %d\n", absInfo.Flat)
-					}
-					if absInfo.Resolution != 0 {
-						fmt.Printf("      Resolution: %d\n", absInfo.Resolution)
-					}
-				}
+		absInfos, err := d.AbsInfos()
+		if err != nil {
+			continue
+		}
+
+		for code, absInfo := range absInfos {
+			fmt.Printf("    Event code %d (%s)\n", code, evdev.CodeName(t, code))
+			fmt.Printf("      Value: %d\n", absInfo.Value)
+			fmt.Printf("      Min: %d\n", absInfo.Minimum)
+			fmt.Printf("      Max: %d\n", absInfo.Maximum)
+
+			if absInfo.Fuzz != 0 {
+				fmt.Printf("      Fuzz: %d\n", absInfo.Fuzz)
+			}
+			if absInfo.Flat != 0 {
+				fmt.Printf("      Flat: %d\n", absInfo.Flat)
+			}
+			if absInfo.Resolution != 0 {
+				fmt.Printf("      Resolution: %d\n", absInfo.Resolution)
 			}
 		}
 	}
