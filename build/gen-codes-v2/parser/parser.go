@@ -194,12 +194,10 @@ var (
 	reDefineWithComment      = regexp.MustCompile(`^#define[ \t]+(?P<name>[A-Z0-9_]+)[ \t]+(?P<value>[0-9a-fA-Zx()_+ ]+)[ \t]+/\*(?P<comment>.*)\*/[ \t]*$`)
 	reDefineWithCommentStart = regexp.MustCompile(`^#define[ \t]+(?P<name>[A-Z0-9_]+)[ \t]+(?P<value>[0-9a-fA-Zx()_+ ]+)[ \t]+/\*(?P<comment>.*)[ \t]*$`)
 	reDefine                 = regexp.MustCompile(`^#define[ \t]+(?P<name>[A-Z0-9_]+)[ \t]+(?P<value>[0-9a-fA-Zx()_+ ]+)`)
-
-	reOnelineComment = regexp.MustCompile(`^[ \t]*/\*(?P<text>.*)\*/[ \t]*$`)
-
-	reMultilineCommentStart = regexp.MustCompile(`^[ \t]*/\*(?P<text>.*)[ \t]*$`)
-	reMultilineCommentEnd   = regexp.MustCompile(`^[ \t](?:\*)?(?P<text>.*)\*/[ \t]*$`)
-	reMultilineCommentMid   = regexp.MustCompile(`^[ \t]*(?:\*)?(?P<text>.*)[ \t]*$`)
+	reOnelineComment         = regexp.MustCompile(`^[ \t]*/\*(?P<text>.*)\*/[ \t]*$`)
+	reMultilineCommentStart  = regexp.MustCompile(`^[ \t]*/\*(?P<text>.*)[ \t]*$`)
+	reMultilineCommentEnd    = regexp.MustCompile(`^[ \t](?:\*)?(?P<text>.*)\*/[ \t]*$`)
+	reMultilineCommentMid    = regexp.MustCompile(`^[ \t]*(?:\*)?(?P<text>.*)[ \t]*$`)
 )
 
 func hasPrefixInSlice(v string, s []string) bool {
@@ -373,44 +371,7 @@ func stripSeparators(elements []interface{}) []interface{} {
 	return elements[start : stop+1]
 }
 
-func filterOutDuplicates(elements []interface{}, decodedValues map[constant]X) []interface{} {
-	var newElements []interface{}
-
-root:
-	for _, e := range elements {
-		v, ok := e.(constant)
-		if !ok {
-			newElements = append(newElements, e)
-			continue
-		}
-
-		for _, e3 := range newElements {
-			v3, ok := e3.(constant)
-			if !ok {
-				continue
-			}
-
-			decoded1, ok := decodedValues[v]
-			if !ok {
-				panic("asdf")
-			}
-			decoded2, ok := decodedValues[v3]
-			if !ok {
-				panic("asdf")
-			}
-
-			if decoded1.value == decoded2.value { // current element value already appear in prepared set
-				continue root
-			}
-		}
-
-		newElements = append(newElements, e)
-	}
-
-	return newElements
-}
-
-type X struct {
+type decodedValue struct {
 	value        int
 	encodingType EncodingType
 }
@@ -448,7 +409,7 @@ func removeRepeatedSeparators(groups []Group) []Group {
 func generateSections(rawGroups []Group, disableComments bool) (codes, typeToString, typeFromString string) {
 	groups := removeRepeatedSeparators(rawGroups)
 
-	var decodedValues = make(map[constant]X)
+	var decodedValues = make(map[constant]decodedValue)
 
 	for _, group := range groups {
 		for _, element := range group.elements {
@@ -460,25 +421,25 @@ func generateSections(rawGroups []Group, disableComments bool) (codes, typeToStr
 					if err != nil {
 						panic(fmt.Errorf("failed to decode equation: %w", err))
 					}
-					decodedValues[v] = X{valDecoded, encType}
+					decodedValues[v] = decodedValue{valDecoded, encType}
 				case EncodingText:
 					encType, valDecoded, err := v.resolveText(&group)
 					if err != nil {
 						panic(fmt.Errorf("failed to decode text: %w", err))
 					}
-					decodedValues[v] = X{valDecoded, encType}
+					decodedValues[v] = decodedValue{valDecoded, encType}
 				case EncodingInteger:
 					i, err := strconv.ParseInt(v.value, 10, 64)
 					if err != nil {
 						panic(fmt.Errorf("integer conversion failed: %w", err))
 					}
-					decodedValues[v] = X{int(i), EncodingInteger}
+					decodedValues[v] = decodedValue{int(i), EncodingInteger}
 				case EncodingHex:
 					i, err := strconv.ParseInt(v.value[2:], 16, 64)
 					if err != nil {
 						panic(fmt.Errorf("hex conversion failed: %w", err))
 					}
-					decodedValues[v] = X{int(i), EncodingHex}
+					decodedValues[v] = decodedValue{int(i), EncodingHex}
 				}
 			}
 		}
@@ -544,9 +505,10 @@ func generateSections(rawGroups []Group, disableComments bool) (codes, typeToStr
 		parts := strings.Split(firstConstant.name, "_")
 		name := parts[0]
 
+		var valueRegistered = make(map[int]string)
+
 		typeToString += fmt.Sprintf("var %sToString = map[%s]string{\n", name, getType(firstConstant.name))
-		for _, element := range filterOutDuplicates(stripSeparators(group.elements), decodedValues) {
-			// for _, element := range stripSeparators(group.elements) {
+		for _, element := range stripSeparators(group.elements) {
 			switch v := element.(type) {
 			case separator:
 				typeToString += "\n"
@@ -555,13 +517,17 @@ func generateSections(rawGroups []Group, disableComments bool) (codes, typeToStr
 				if !ok {
 					panic("decoded value not found")
 				}
+				if name, ok := valueRegistered[decoded.value]; ok {
+					typeToString += fmt.Sprintf("\t// %s: \"%s\", // (%s)\n", v.name, v.name, name)
+					continue
+				}
+
+				valueRegistered[decoded.value] = v.name
 				switch decoded.encodingType {
-				case EncodingHex:
-					typeToString += fmt.Sprintf("\t0x%x: \"%s\",\n", decoded.value, v.name)
-				case EncodingInteger:
-					typeToString += fmt.Sprintf("\t%d: \"%s\",\n", decoded.value, v.name)
+				case EncodingHex, EncodingInteger:
+					typeToString += fmt.Sprintf("\t%s: \"%s\",\n", v.name, v.name)
 				default:
-					panic("not expected encoding type")
+					panic("unexpected encoding type")
 				}
 			}
 		}
