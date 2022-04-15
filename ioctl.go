@@ -153,12 +153,16 @@ func ioctlEVIOCSABS(fd uintptr, abs int, info AbsInfo) error {
 	return doIoctl(fd, code, unsafe.Pointer(&info))
 }
 
-func ioctlEVIOCGRAB(fd uintptr) error {
-	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x90, 0)
+func ioctlEVIOCGRAB(fd uintptr, p int) error {
+	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x90, unsafe.Sizeof(p))
+	if p != 0 {
+		return doIoctl(fd, code, unsafe.Pointer(&p))
+	}
 	return doIoctl(fd, code, nil)
 }
 
 func ioctlEVIOCREVOKE(fd uintptr) error {
-	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x91, 0)
+	var p int
+	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x91, unsafe.Sizeof(p))
 	return doIoctl(fd, code, nil)
 }

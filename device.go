@@ -185,10 +185,15 @@ func (d *InputDevice) AbsInfos() (map[EvCode]AbsInfo, error) {
 // Grab grabs the device for exclusive access. No other process will receive
 // input events until the device instance is active.
 func (d *InputDevice) Grab() error {
-	return ioctlEVIOCGRAB(d.file.Fd())
+	return ioctlEVIOCGRAB(d.file.Fd(), 1)
 }
 
-// Revoke releases a previously taken exclusive use with Grab().
+// Ungrab releases a previously taken exclusive use with Grab().
+func (d *InputDevice) Ungrab() error {
+	return ioctlEVIOCGRAB(d.file.Fd(), 0)
+}
+
+// Revoke revokes device access
 func (d *InputDevice) Revoke() error {
 	return ioctlEVIOCREVOKE(d.file.Fd())
 }
