@@ -130,23 +130,20 @@ func main() {
 			return
 		}
 
-		typeName := evdev.TypeName(e.Type)
-		codeName := evdev.CodeName(e.Type, e.Code)
 		ts := fmt.Sprintf("Event: time %d.%06d", e.Time.Sec, e.Time.Usec)
 
 		switch e.Type {
 		case evdev.EV_SYN:
 			switch e.Code {
 			case evdev.SYN_MT_REPORT:
-				fmt.Printf("%s, ++++++++++++++ %s ++++++++++++\n", ts, codeName)
+				fmt.Printf("%s, ++++++++++++++ %s ++++++++++++\n", ts, e.CodeName())
 			case evdev.SYN_DROPPED:
-				fmt.Printf("%s, >>>>>>>>>>>>>> %s <<<<<<<<<<<<\n", ts, codeName)
+				fmt.Printf("%s, >>>>>>>>>>>>>> %s <<<<<<<<<<<<\n", ts, e.CodeName())
 			default:
-				fmt.Printf("%s, -------------- %s ------------\n", ts, codeName)
+				fmt.Printf("%s, -------------- %s ------------\n", ts, e.CodeName())
 			}
 		default:
-			fmt.Printf("%s, type %d (%s), code %d (%s), value %d\n",
-				ts, e.Type, typeName, e.Code, codeName, e.Value)
+			fmt.Printf("%s, %s\n", ts, e.String())
 		}
 	}
 }

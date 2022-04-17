@@ -1,6 +1,9 @@
 package evdev
 
-import "syscall"
+import (
+	"fmt"
+	"syscall"
+)
 
 // EvType is EV_KEY, EV_SW, EV_LED, EV_SND, ...
 type EvType uint16
@@ -20,6 +23,21 @@ type InputEvent struct {
 	Type  EvType          // event type - one of ecodes.EV_*
 	Code  EvCode          // event code related to the event type
 	Value int32           // event value related to the event type
+}
+
+func (e *InputEvent) TypeName() string {
+	return TypeName(e.Type)
+}
+
+func (e *InputEvent) CodeName() string {
+	return CodeName(e.Type, e.Code)
+}
+
+func (e *InputEvent) String() string {
+	return fmt.Sprintf(
+		"type: 0x%02x [%s], code: 0x%02x [%s], value: %d",
+		e.Type, e.TypeName(), e.Code, e.CodeName(), e.Value,
+	)
 }
 
 // InputID ...
