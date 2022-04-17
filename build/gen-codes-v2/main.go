@@ -98,7 +98,7 @@ func main() {
 	var gitTag string
 
 	flag.BoolVar(
-		&disableComments, "disableCommentAutism", false,
+		&disableComments, "disableComments", false,
 		"disable including comments in the output file",
 	)
 	flag.StringVar(&gitTag, "tag", "", "select precise tag release of Linux")
