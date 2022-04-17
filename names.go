@@ -1,16 +1,16 @@
 package evdev
 
 var EvCodeNameLookup = map[EvType]map[EvCode]string{
-	EV_SYN: SYNToString,
-	EV_KEY: KEYToString,
-	EV_REL: RELToString,
-	EV_ABS: ABSToString,
-	EV_MSC: MSCToString,
-	EV_SW:  SWToString,
-	EV_LED: LEDToString,
-	EV_SND: SNDToString,
-	EV_REP: REPToString,
-	EV_FF:  FFToString,
+	EV_SYN: SYNNames,
+	EV_KEY: KEYNames,
+	EV_REL: RELNames,
+	EV_ABS: ABSNames,
+	EV_MSC: MSCNames,
+	EV_SW:  SWNames,
+	EV_LED: LEDNames,
+	EV_SND: SNDNames,
+	EV_REP: REPNames,
+	EV_FF:  FFNames,
 	// EV_PWR:
 	// EV_FF_STATUS:
 }
