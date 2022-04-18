@@ -23,9 +23,9 @@ func ioctlMakeCode(dir, typ, nr int, size uintptr) uint32 {
 		panic(fmt.Errorf("invalid ioctl size value: %d", size))
 	}
 
-	code |= (uint32(dir) << 30)
-	code |= (uint32(size) << 16)
-	code |= (uint32(typ) << 8)
+	code |= uint32(dir) << 30
+	code |= uint32(size) << 16
+	code |= uint32(typ) << 8
 	code |= uint32(nr)
 
 	return code
