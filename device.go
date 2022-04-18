@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"syscall"
 )
 
 // InputDevice represent a Linux kernel input device in userspace.
@@ -196,6 +197,14 @@ func (d *InputDevice) Ungrab() error {
 // Revoke revokes device access
 func (d *InputDevice) Revoke() error {
 	return ioctlEVIOCREVOKE(d.file.Fd())
+}
+
+// NonBlock sets file descriptor into nonblocking mode.
+// This way it is possible to interrupt ReadOne call by closing the device.
+// Note: file.Fd() call will set file descriptor back to blocking mode so make sure your program
+// is not using any other method than ReadOne after NonBlock call.
+func (d *InputDevice) NonBlock() error {
+	return syscall.SetNonblock(int(d.file.Fd()), true)
 }
 
 // ReadOne reads one InputEvent from the device. It blocks until an event has
