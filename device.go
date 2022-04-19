@@ -92,6 +92,24 @@ func (d *InputDevice) CapableTypes() []EvType {
 	return types
 }
 
+// CapableEvents returns a slice of EvCode that are the device supports for given EvType
+func (d *InputDevice) CapableEvents(t EvType) []EvCode {
+	var codes []EvCode
+
+	evBits, err := ioctlEVIOCGBIT(d.file.Fd(), int(t))
+	if err != nil {
+		return []EvCode{}
+	}
+
+	evBitmap := newBitmap(evBits)
+
+	for _, t := range evBitmap.setBits() {
+		codes = append(codes, EvCode(t))
+	}
+
+	return codes
+}
+
 // Properties returns a slice of EvProp that are the device supports
 func (d *InputDevice) Properties() []EvProp {
 	var props []EvProp
