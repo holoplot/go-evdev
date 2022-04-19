@@ -135,10 +135,41 @@ func ioctlEVIOCGSW(fd uintptr) ([]byte, error) {
 }
 
 func ioctlEVIOCGBIT(fd uintptr, evtype int) ([]byte, error) {
+	var cnt int
+
+	switch evtype {
+	case 0:
+		// special case, indicating the list of all feature types supported should be returned,
+		// rather than the list of particular features for that type
+		cnt = EV_CNT
+	case EV_KEY:
+		cnt = KEY_CNT
+	case EV_REL:
+		cnt = REL_CNT
+	case EV_ABS:
+		cnt = ABS_CNT
+	case EV_MSC:
+		cnt = MSC_CNT
+	case EV_SW:
+		cnt = SW_CNT
+	case EV_LED:
+		cnt = LED_CNT
+	case EV_SND:
+		cnt = SND_CNT
+	case EV_REP:
+		cnt = REP_CNT
+	case EV_FF:
+		cnt = FF_CNT
+	default: // EV_PWR, EV_FF_STATUS ??
+		cnt = KEY_MAX
+	}
+
+	bytesNumber := (cnt + 7) / 8
+
 	bits := [KEY_MAX]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x20+evtype, unsafe.Sizeof(bits))
 	err := doIoctl(fd, code, unsafe.Pointer(&bits))
-	return bits[:], err
+	return bits[:bytesNumber], err
 }
 
 func ioctlEVIOCGABS(fd uintptr, abs int) (AbsInfo, error) {
