@@ -79,11 +79,10 @@ func main() {
 		fmt.Printf("  Event type %d (%s)\n", t, evdev.TypeName(t))
 
 		state, err := d.State(t)
-		if err != nil {
-			continue
-		}
-		for code, value := range state {
-			fmt.Printf("    Event code %d (%s) state %v\n", code, evdev.CodeName(t, code), value)
+		if err == nil {
+			for code, value := range state {
+				fmt.Printf("    Event code %d (%s) state %v\n", code, evdev.CodeName(t, code), value)
+			}
 		}
 
 		if t != evdev.EV_ABS {
