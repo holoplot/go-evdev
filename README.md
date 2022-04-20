@@ -9,11 +9,11 @@ The implementation in this package has the following features:
 
 * Query device information such as the name, the physical location, the unique ID,
   the vendor/product/bus/version IDs
-* Query supported event types and device properties
+* Query supported event types, codes and device properties
 * Query the current status of bit-field based input types (such as keyboard, switches etc)
   as well as information on absolute types (`ABS_X`, ...) including their min/max values and
   current state
-* Grab/Revoke support for exclusive claiming of devices
+* Grab/Ungrab/Revoke support for exclusive claiming of devices
 * Auto-generated `const` definitions and maps for types and codes from the kernel include headers
 
 # Install
@@ -30,10 +30,11 @@ import "github.com/holoplot/go-evdev"
 
 # Re-generating codes.go
 
-To re-generated `pkg/codes.go` from the latest kernel headers, use the following command.
+To re-generate `codes.go` from the latest kernel headers, use the following command.
 
 ```
-go run build/gen-codes/main.go /usr/include/linux/input.h /usr/include/linux/input-event-codes.h | gofmt >codes.go
+go run build/gen-codes/main.go 
+gofmt codes.go
 ```
 
 # Example

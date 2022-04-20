@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"validate/evdev"
+	"github.com/holoplot/go-evdev"
 )
 
 type evCodeToString = map[evdev.EvCode]string
@@ -49,6 +49,7 @@ func contains[T comparable](s []T, e T) bool {
 	}
 	return false
 }
+
 func compareGroups[V evdev.EvCode | evdev.EvType | evdev.EvProp](from map[string]V, to map[V]string) {
 	var duplicatedVal = make(map[V][]string)
 
