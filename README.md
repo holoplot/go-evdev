@@ -37,6 +37,8 @@ go run build/gen-codes/main.go
 gofmt codes.go
 ```
 
+You can optionally validate generated string mappings with `go run build/gen-codes-validate/main.go` 
+
 # Example
 
 See the code in `cmd/evtest` for an example.
