@@ -13,7 +13,7 @@ func (bm *bitmap) bitIsSet(bit int) bool {
 }
 
 func (bm *bitmap) setBits() []int {
-	a := []int{}
+	var a []int
 
 	for i, by := range bm.bits {
 		for bit := 0; bit < 8; bit++ {

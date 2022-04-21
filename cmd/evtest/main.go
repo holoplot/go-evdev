@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	evdev "github.com/holoplot/go-evdev"
+	"github.com/holoplot/go-evdev"
 )
 
 func listDevices() {
@@ -85,25 +85,29 @@ func main() {
 			}
 		}
 
-		if t == evdev.EV_ABS {
-			absInfos, err := d.AbsInfos()
-			if err == nil {
-				for code, absInfo := range absInfos {
-					fmt.Printf("    Event code %d (%s)\n", code, evdev.CodeName(t, code))
-					fmt.Printf("      Value: %d\n", absInfo.Value)
-					fmt.Printf("      Min: %d\n", absInfo.Minimum)
-					fmt.Printf("      Max: %d\n", absInfo.Maximum)
+		if t != evdev.EV_ABS {
+			continue
+		}
 
-					if absInfo.Fuzz != 0 {
-						fmt.Printf("      Fuzz: %d\n", absInfo.Fuzz)
-					}
-					if absInfo.Flat != 0 {
-						fmt.Printf("      Flat: %d\n", absInfo.Flat)
-					}
-					if absInfo.Resolution != 0 {
-						fmt.Printf("      Resolution: %d\n", absInfo.Resolution)
-					}
-				}
+		absInfos, err := d.AbsInfos()
+		if err != nil {
+			continue
+		}
+
+		for code, absInfo := range absInfos {
+			fmt.Printf("    Event code %d (%s)\n", code, evdev.CodeName(t, code))
+			fmt.Printf("      Value: %d\n", absInfo.Value)
+			fmt.Printf("      Min: %d\n", absInfo.Minimum)
+			fmt.Printf("      Max: %d\n", absInfo.Maximum)
+
+			if absInfo.Fuzz != 0 {
+				fmt.Printf("      Fuzz: %d\n", absInfo.Fuzz)
+			}
+			if absInfo.Flat != 0 {
+				fmt.Printf("      Flat: %d\n", absInfo.Flat)
+			}
+			if absInfo.Resolution != 0 {
+				fmt.Printf("      Resolution: %d\n", absInfo.Resolution)
 			}
 		}
 	}
@@ -125,23 +129,20 @@ func main() {
 			return
 		}
 
-		typeName := evdev.TypeName(e.Type)
-		codeName := evdev.CodeName(e.Type, e.Code)
 		ts := fmt.Sprintf("Event: time %d.%06d", e.Time.Sec, e.Time.Usec)
 
 		switch e.Type {
 		case evdev.EV_SYN:
 			switch e.Code {
 			case evdev.SYN_MT_REPORT:
-				fmt.Printf("%s, ++++++++++++++ %s ++++++++++++\n", ts, codeName)
+				fmt.Printf("%s, ++++++++++++++ %s ++++++++++++\n", ts, e.CodeName())
 			case evdev.SYN_DROPPED:
-				fmt.Printf("%s, >>>>>>>>>>>>>> %s <<<<<<<<<<<<\n", ts, codeName)
+				fmt.Printf("%s, >>>>>>>>>>>>>> %s <<<<<<<<<<<<\n", ts, e.CodeName())
 			default:
-				fmt.Printf("%s, -------------- %s ------------\n", ts, codeName)
+				fmt.Printf("%s, -------------- %s ------------\n", ts, e.CodeName())
 			}
 		default:
-			fmt.Printf("%s, type %d (%s), code %d (%s), value %d\n",
-				ts, e.Type, typeName, e.Code, codeName, e.Value)
+			fmt.Printf("%s, %s\n", ts, e.String())
 		}
 	}
 }
