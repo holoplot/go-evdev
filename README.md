@@ -19,7 +19,7 @@ The implementation in this package has the following features:
 # Install
 
 ```
-go get https://github.com/holoplot/go-evdev
+go get github.com/holoplot/go-evdev
 ```
 
 And then use it in your source code.
