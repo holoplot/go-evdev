@@ -49,6 +49,13 @@ func main() {
 		return
 	}
 
+	if err := d.Grab(); err != nil {
+		fmt.Printf("Cannot grab device: %s", err)
+		return
+	} else if err := d.Ungrab(); err != nil {
+		fmt.Printf("Cannot ungrab device: %s", err)
+	}
+
 	vMajor, vMinor, vMicro := d.DriverVersion()
 	fmt.Printf("Input driver version is %d.%d.%d\n", vMajor, vMinor, vMicro)
 

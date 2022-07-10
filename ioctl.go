@@ -185,7 +185,8 @@ func ioctlEVIOCSABS(fd uintptr, abs int, info AbsInfo) error {
 }
 
 func ioctlEVIOCGRAB(fd uintptr, p int) error {
-	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x90, unsafe.Sizeof(p))
+	var nibble uint = 0x4
+	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x90, uintptr(nibble))
 	if p != 0 {
 		return doIoctl(fd, code, unsafe.Pointer(&p))
 	}
