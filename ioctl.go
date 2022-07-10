@@ -184,9 +184,8 @@ func ioctlEVIOCSABS(fd uintptr, abs int, info AbsInfo) error {
 	return doIoctl(fd, code, unsafe.Pointer(&info))
 }
 
-func ioctlEVIOCGRAB(fd uintptr, p int) error {
-	var nibble uint = 0x4
-	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x90, uintptr(nibble))
+func ioctlEVIOCGRAB(fd uintptr, p int32) error {
+	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x90, unsafe.Sizeof(p))
 	if p != 0 {
 		return doIoctl(fd, code, unsafe.Pointer(&p))
 	}
@@ -196,5 +195,75 @@ func ioctlEVIOCGRAB(fd uintptr, p int) error {
 func ioctlEVIOCREVOKE(fd uintptr) error {
 	var p int
 	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x91, unsafe.Sizeof(p))
+	return doIoctl(fd, code, nil)
+}
+
+func ioctlUISETEVBIT(fd uintptr, ev uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 100, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(ev))
+}
+
+func ioctlUISETKEYBIT(fd uintptr, key uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 101, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(key))
+}
+
+func ioctlUISETRELBIT(fd uintptr, rel uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 102, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(rel))
+}
+
+func ioctlUISETABSBIT(fd uintptr, abs uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 103, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(abs))
+}
+
+func ioctlUISETMSCBIT(fd uintptr, msc uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 104, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(msc))
+}
+
+func ioctlUISETLEDBIT(fd uintptr, led uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 105, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(led))
+}
+
+func ioctlUISETSNDBIT(fd uintptr, snd uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 106, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(snd))
+}
+
+func ioctlUISETFFBIT(fd uintptr, fe uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 107, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(fe))
+}
+
+func ioctlUISETSWBIT(fd uintptr, sw uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 109, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(sw))
+}
+
+func ioctlUISETPROPBIT(fd uintptr, prop uintptr) error {
+	var p int32
+	code := ioctlMakeCode(ioctlDirWrite, 'U', 110, unsafe.Sizeof(p))
+	return doIoctl(fd, code, unsafe.Pointer(prop))
+}
+
+func ioctlUIDEVCREATE(fd uintptr) error {
+	code := ioctlMakeCode(ioctlDirNone, 'U', 1, 0)
+	return doIoctl(fd, code, nil)
+}
+
+func ioctlUIDEVDESTROY(fd uintptr) error {
+	code := ioctlMakeCode(ioctlDirNone, 'U', 2, 0)
 	return doIoctl(fd, code, nil)
 }
