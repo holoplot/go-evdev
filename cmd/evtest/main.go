@@ -34,6 +34,26 @@ func listDevices() {
 	}
 }
 
+func cloneDevice(dev *evdev.InputDevice) (*evdev.InputDevice, error) {
+	return evdev.CloneDevice(dev)
+}
+
+func createDevice() (*evdev.InputDevice, error) {
+	return evdev.CreateDevice("fake-mouse", map[evdev.EvType][]evdev.EvCode{
+		evdev.EV_KEY: {
+			evdev.BTN_LEFT,
+			evdev.BTN_RIGHT,
+			evdev.BTN_MIDDLE,
+		},
+		evdev.EV_REL: {
+			evdev.REL_X,
+			evdev.REL_Y,
+			evdev.REL_WHEEL,
+			evdev.REL_HWHEEL,
+		},
+	})
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: %s <input device>\n\n", os.Args[0])

@@ -15,8 +15,10 @@ const (
 	absSize           = 64
 )
 
-// CreateDevice from scratch with the given capabilities
-func CreateDevice(uinputDev *UinputUserDevice, capabilities map[EvType][]EvCode, name string) (*InputDevice, error) {
+// CreateDevice from scratch with the provided capabilities and name
+// If setup fails the device will be removed from the system,
+// once setup it can be removed by calling dev.Close
+func CreateDevice(name string, capabilities map[EvType][]EvCode) (*InputDevice, error) {
 	deviceFile, err := os.OpenFile("/dev/uinput", syscall.O_WRONLY|syscall.O_NONBLOCK, 0660)
 	if err != nil {
 		return nil, err
@@ -48,13 +50,17 @@ func CreateDevice(uinputDev *UinputUserDevice, capabilities map[EvType][]EvCode,
 		},
 	})
 	if err != nil {
+		DestroyDevice(newDev)
 		return nil, err
 	}
 
 	return newDev, nil
 }
 
-// CloneDevice from existing device
+// CloneDevice from an existing one
+// all capabilites will be coppied over to the new virtual device
+// If setup fails the device will be removed from the system,
+// once setup it can be removed by calling dev.Close
 func CloneDevice(dev *InputDevice) (*InputDevice, error) {
 	deviceFile, err := os.OpenFile("/dev/uinput", syscall.O_WRONLY|syscall.O_NONBLOCK, 0660)
 	if err != nil {
@@ -104,45 +110,38 @@ func CloneDevice(dev *InputDevice) (*InputDevice, error) {
 
 func setEventCodes(dev *InputDevice, ev EvType, codes []EvCode) error {
 	for _, code := range codes {
+		var err error
+
 		switch ev {
 		case EV_ABS:
-			if err := ioctlUISETABSBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETABSBIT(dev.file.Fd(), uintptr(code))
 		case EV_FF:
-			if err := ioctlUISETFFBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETFFBIT(dev.file.Fd(), uintptr(code))
 		case EV_KEY:
-			if err := ioctlUISETKEYBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETKEYBIT(dev.file.Fd(), uintptr(code))
 		case EV_LED:
-			if err := ioctlUISETLEDBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETLEDBIT(dev.file.Fd(), uintptr(code))
 		case EV_MSC:
-			if err := ioctlUISETMSCBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETMSCBIT(dev.file.Fd(), uintptr(code))
 		case EV_REL:
-			if err := ioctlUISETRELBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETRELBIT(dev.file.Fd(), uintptr(code))
 		case EV_SND:
-			if err := ioctlUISETSNDBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETSNDBIT(dev.file.Fd(), uintptr(code))
 		case EV_SW:
-			if err := ioctlUISETSWBIT(dev.file.Fd(), uintptr(code)); err != nil {
-				return err
-			}
+			err = ioctlUISETSWBIT(dev.file.Fd(), uintptr(code))
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
+// Destroy an input device, removing it from the system
+// This is designed to be called on self created virtual devices and may fail if colled
+// real devices attached to the system
 func DestroyDevice(dev *InputDevice) error {
 	return ioctlUIDEVDESTROY(dev.file.Fd())
 }
