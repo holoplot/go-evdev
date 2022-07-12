@@ -35,23 +35,32 @@ func listDevices() {
 }
 
 func cloneDevice(dev *evdev.InputDevice) (*evdev.InputDevice, error) {
-	return evdev.CloneDevice(dev)
+	return evdev.CloneDevice("my-device-clone", dev)
 }
 
 func createDevice() (*evdev.InputDevice, error) {
-	return evdev.CreateDevice("fake-mouse", map[evdev.EvType][]evdev.EvCode{
-		evdev.EV_KEY: {
-			evdev.BTN_LEFT,
-			evdev.BTN_RIGHT,
-			evdev.BTN_MIDDLE,
+	return evdev.CreateDevice(
+		"fake-mouse",
+		evdev.InputID{
+			BusType: 0x03,
+			Vendor:  0x4712,
+			Product: 0x0816,
+			Version: 1,
 		},
-		evdev.EV_REL: {
-			evdev.REL_X,
-			evdev.REL_Y,
-			evdev.REL_WHEEL,
-			evdev.REL_HWHEEL,
+		map[evdev.EvType][]evdev.EvCode{
+			evdev.EV_KEY: {
+				evdev.BTN_LEFT,
+				evdev.BTN_RIGHT,
+				evdev.BTN_MIDDLE,
+			},
+			evdev.EV_REL: {
+				evdev.REL_X,
+				evdev.REL_Y,
+				evdev.REL_WHEEL,
+				evdev.REL_HWHEEL,
+			},
 		},
-	})
+	)
 }
 
 func main() {
