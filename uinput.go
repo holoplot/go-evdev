@@ -13,7 +13,7 @@ const (
 	absSize           = 64
 )
 
-// CreateDevice creates a devicefrom scratch with the provided capabilities and name
+// CreateDevice creates a device from scratch with the provided capabilities and name
 // If set up fails the device will be removed from the system,
 // once set up it can be removed by calling dev.Close
 func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*InputDevice, error) {
@@ -29,12 +29,12 @@ func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*I
 	for ev, codes := range capabilities {
 		if err := ioctlUISETEVBIT(newDev.file.Fd(), uintptr(ev)); err != nil {
 			DestroyDevice(newDev)
-			return nil, fmt.Errorf("failed to set ev bit: %d", ev)
+			return nil, fmt.Errorf("failed to set ev bit: %d - %w", ev, err)
 		}
 
 		if err := setEventCodes(newDev, ev, codes); err != nil {
 			DestroyDevice(newDev)
-			return nil, fmt.Errorf("failed to set ev code")
+			return nil, fmt.Errorf("failed to set ev code: %w", err)
 		}
 	}
 
@@ -43,7 +43,7 @@ func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*I
 		ID:   id,
 	}); err != nil {
 		DestroyDevice(newDev)
-		return nil, err
+		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
 	return newDev, nil
@@ -83,12 +83,11 @@ func CloneDevice(name string, dev *InputDevice) (*InputDevice, error) {
 		return nil, fmt.Errorf("failed to get original device id: %w", err)
 	}
 
-	_, err = createUsbDevice(newDev.file, UinputUserDevice{
+	if _, err = createUsbDevice(newDev.file, UinputUserDevice{
 		Name: toUinputName([]byte(name)),
 		ID:   id,
-	})
-	if err != nil {
-		return nil, err
+	}); err != nil {
+		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
 	return newDev, nil
@@ -157,5 +156,5 @@ func createUsbDevice(file *os.File, dev UinputUserDevice) (fd *os.File, err erro
 		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
-	return file, err
+	return file, nil
 }
