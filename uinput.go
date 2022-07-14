@@ -38,7 +38,7 @@ func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*I
 		}
 	}
 
-	if _, err = createUsbDevice(newDev.file, UinputUserDevice{
+	if _, err = createInputDevice(newDev.file, UinputUserDevice{
 		Name: toUinputName([]byte(name)),
 		ID:   id,
 	}); err != nil {
@@ -83,7 +83,7 @@ func CloneDevice(name string, dev *InputDevice) (*InputDevice, error) {
 		return nil, fmt.Errorf("failed to get original device id: %w", err)
 	}
 
-	if _, err = createUsbDevice(newDev.file, UinputUserDevice{
+	if _, err = createInputDevice(newDev.file, UinputUserDevice{
 		Name: toUinputName([]byte(name)),
 		ID:   id,
 	}); err != nil {
@@ -138,7 +138,7 @@ func toUinputName(name []byte) (uinputName [uinputMaxNameSize]byte) {
 	return fixedSizeName
 }
 
-func createUsbDevice(file *os.File, dev UinputUserDevice) (fd *os.File, err error) {
+func createInputDevice(file *os.File, dev UinputUserDevice) (fd *os.File, err error) {
 	buf := new(bytes.Buffer)
 
 	if err = binary.Write(buf, binary.LittleEndian, dev); err != nil {
