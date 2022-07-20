@@ -73,3 +73,14 @@ type InputMask struct {
 	CodesSize uint32
 	CodesPtr  uint64
 }
+
+// UinputUserDevice is used when creating or cloning a device
+type UinputUserDevice struct {
+	Name       [uinputMaxNameSize]byte
+	ID         InputID
+	EffectsMax uint32
+	Absmax     [absSize]int32
+	Absmin     [absSize]int32
+	Absfuzz    [absSize]int32
+	Absflat    [absSize]int32
+}
