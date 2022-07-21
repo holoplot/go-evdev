@@ -3,6 +3,7 @@ package evdev
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -12,6 +13,10 @@ const (
 	ioctlDirWrite = 0x1
 	ioctlDirRead  = 0x2
 )
+
+func trimNull(s string) string {
+	return strings.Trim(s, "\x00")
+}
 
 func ioctlMakeCode(dir, typ, nr int, size uintptr) uint32 {
 	var code uint32
@@ -54,14 +59,14 @@ func ioctlEVIOCGID(fd uintptr) (InputID, error) {
 	return id, err
 }
 
-func ioctlEVIOCGREP(fd uintptr) ([2]uint, error) {
-	rep := [2]uint{}
+func ioctlEVIOCGREP(fd uintptr) ([2]uint32, error) {
+	rep := [2]uint32{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x03, unsafe.Sizeof(rep))
 	err := doIoctl(fd, code, unsafe.Pointer(&rep))
 	return rep, err
 }
 
-func ioctlEVIOCSREP(fd uintptr, rep [2]uint) error {
+func ioctlEVIOCSREP(fd uintptr, rep [2]uint32) error {
 	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x03, unsafe.Sizeof(rep))
 	return doIoctl(fd, code, unsafe.Pointer(&rep))
 }
@@ -82,21 +87,21 @@ func ioctlEVIOCGNAME(fd uintptr) (string, error) {
 	str := [256]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x06, unsafe.Sizeof(str))
 	err := doIoctl(fd, code, unsafe.Pointer(&str))
-	return string(str[:]), err
+	return trimNull(string(str[:])), err
 }
 
 func ioctlEVIOCGPHYS(fd uintptr) (string, error) {
 	str := [256]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x07, unsafe.Sizeof(str))
 	err := doIoctl(fd, code, unsafe.Pointer(&str))
-	return string(str[:]), err
+	return trimNull(string(str[:])), err
 }
 
 func ioctlEVIOCGUNIQ(fd uintptr) (string, error) {
 	str := [256]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x08, unsafe.Sizeof(str))
 	err := doIoctl(fd, code, unsafe.Pointer(&str))
-	return string(str[:]), err
+	return trimNull(string(str[:])), err
 }
 
 func ioctlEVIOCGPROP(fd uintptr) ([]byte, error) {
@@ -193,7 +198,7 @@ func ioctlEVIOCGRAB(fd uintptr, p int32) error {
 }
 
 func ioctlEVIOCREVOKE(fd uintptr) error {
-	var p int
+	var p int32
 	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x91, unsafe.Sizeof(p))
 	return doIoctl(fd, code, nil)
 }
