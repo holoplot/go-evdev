@@ -14,6 +14,10 @@ const (
 	ioctlDirRead  = 0x2
 )
 
+func trimNull(s string) string {
+	return strings.Trim(s, "\x00")
+}
+
 func ioctlMakeCode(dir, typ, nr int, size uintptr) uint32 {
 	var code uint32
 	if dir > ioctlDirWrite|ioctlDirRead {
@@ -83,21 +87,21 @@ func ioctlEVIOCGNAME(fd uintptr) (string, error) {
 	str := [256]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x06, unsafe.Sizeof(str))
 	err := doIoctl(fd, code, unsafe.Pointer(&str))
-	return strings.Trim(string(str[:]), "\x00"), err
+	return trimNull(string(str[:])), err
 }
 
 func ioctlEVIOCGPHYS(fd uintptr) (string, error) {
 	str := [256]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x07, unsafe.Sizeof(str))
 	err := doIoctl(fd, code, unsafe.Pointer(&str))
-	return strings.Trim(string(str[:]), "\x00"), err
+	return trimNull(string(str[:])), err
 }
 
 func ioctlEVIOCGUNIQ(fd uintptr) (string, error) {
 	str := [256]byte{}
 	code := ioctlMakeCode(ioctlDirRead, 'E', 0x08, unsafe.Sizeof(str))
 	err := doIoctl(fd, code, unsafe.Pointer(&str))
-	return strings.Trim(string(str[:]), "\x00"), err
+	return trimNull(string(str[:])), err
 }
 
 func ioctlEVIOCGPROP(fd uintptr) ([]byte, error) {
