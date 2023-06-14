@@ -19,7 +19,7 @@ func Test_bitsToArray(t *testing.T) {
 		{
 			name: "2",
 			bits: []byte{},
-			want: []int{},
+			want: nil,
 		},
 		{
 			name: "3",
