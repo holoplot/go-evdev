@@ -34,7 +34,7 @@ func Open(path string) (*InputDevice, error) {
 	return d, nil
 }
 
-// OpenByName creates a new InputDevice from the device name.
+// OpenByName creates a new InputDevice from the device name as reported by the kernel.
 // Returns an error if the name does not exist, or the device node could
 // not be opened or its properties failed to read.
 func OpenByName(name string) (*InputDevice, error) {
