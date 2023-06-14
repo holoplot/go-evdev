@@ -5,11 +5,14 @@ import (
 	"io/ioutil"
 )
 
+// InputPath contains information about an InputDevice Name & Path
 type InputPath struct {
 	Name string
 	Path string
 }
 
+// ListDevicePaths lists all available input devices, returning their
+// filename path, and the name as reported by the kernel.
 func ListDevicePaths() ([]InputPath, error) {
 	var list []InputPath
 

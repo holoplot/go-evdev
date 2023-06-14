@@ -34,6 +34,22 @@ func Open(path string) (*InputDevice, error) {
 	return d, nil
 }
 
+// OpenByName creates a new InputDevice from the device name.
+// Returns an error if the name does not exist, or the device node could
+// not be opened or its properties failed to read.
+func OpenByName(name string) (*InputDevice, error) {
+	devices, err := ListDevicePaths()
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range devices {
+		if d.Name == name {
+			return Open(d.Path)
+		}
+	}
+	return nil, fmt.Errorf("could not find input device with name %q", name)
+}
+
 // Close releases the resources held by an InputDevice. After calling this
 // function, the InputDevice is no longer operational.
 func (d *InputDevice) Close() error {
