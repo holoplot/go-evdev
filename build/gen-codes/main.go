@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"go/format"
 	"io"
 	"net/http"
 	"os"
@@ -144,16 +145,13 @@ func main() {
 	fmt.Println("Generating file...")
 	data := parser.GenerateFile(allElements, disableComments, selectedTag, inputHURL, eventCodesURL)
 
-	fmt.Println("Writing file...")
-	fileName := "codes.go"
-	fd, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	formatted, err := format.Source([]byte(data))
 	if err != nil {
-		fmt.Printf("Failed to open %s file: %v", fileName, err)
+		fmt.Printf("Cannot format: %s", err)
 		os.Exit(1)
 	}
-
-	_, err = fd.WriteString(data)
-	if err != nil {
+	fileName := "codes.go"
+	if err := os.WriteFile(fileName, formatted, 0o644); err != nil {
 		fmt.Printf("Failed to write data to %s file: %v", fileName, err)
 		os.Exit(1)
 	}
