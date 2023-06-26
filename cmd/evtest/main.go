@@ -2,35 +2,19 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/holoplot/go-evdev"
 )
 
 func listDevices() {
-	basePath := "/dev/input"
-
-	files, err := ioutil.ReadDir(basePath)
+	devicePaths, err := evdev.ListDevicePaths()
 	if err != nil {
-		fmt.Printf("Cannot read /dev/input: %v\n", err)
+		fmt.Printf("Cannot list device paths: %s", err)
 		return
 	}
-
-	for _, fileName := range files {
-		if fileName.IsDir() {
-			continue
-		}
-
-		full := fmt.Sprintf("%s/%s", basePath, fileName.Name())
-		d, err := evdev.Open(full)
-		if err == nil {
-			name, _ := d.Name()
-
-			if err == nil {
-				fmt.Printf("%s:\t%s\n", d.Path(), name)
-			}
-		}
+	for _, d := range devicePaths {
+		fmt.Printf("%s:\t%s\n", d.Path, d.Name)
 	}
 }
 
