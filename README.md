@@ -34,7 +34,6 @@ To re-generate `codes.go` from the latest kernel headers, use the following comm
 
 ```
 go run build/gen-codes/main.go 
-gofmt codes.go
 ```
 
 You can optionally validate generated string mappings with `go run build/gen-codes-validate/main.go` 
