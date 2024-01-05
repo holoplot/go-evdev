@@ -3,6 +3,7 @@ package evdev
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 // InputPath contains information about an InputDevice Name & Path
@@ -29,7 +30,7 @@ func ListDevicePaths() ([]InputPath, error) {
 		}
 
 		full := fmt.Sprintf("%s/%s", basePath, fileName.Name())
-		if d, err := Open(full); err == nil {
+		if d, err := OpenWithFlags(full, os.O_RDONLY); err == nil {
 			name, _ := d.Name()
 			list = append(list, InputPath{Name: name, Path: d.Path()})
 			d.Close()
