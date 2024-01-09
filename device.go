@@ -28,6 +28,7 @@ func Open(path string) (*InputDevice, error) {
 
 	d.driverVersion, err = ioctlEVIOCGVERSION(d.file.Fd())
 	if err != nil {
+		_ = d.file.Close()
 		return nil, fmt.Errorf("cannot get driver version: %v", err)
 	}
 
