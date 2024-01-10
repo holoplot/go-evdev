@@ -15,13 +15,16 @@ type InputDevice struct {
 	driverVersion int32
 }
 
-// Open creates a new InputDevice from the given path. Returns an error if
-// the device node could not be opened or its properties failed to read.
-func Open(path string) (*InputDevice, error) {
+// OpenWithFlags creates a new InputDevice from the given path. The input device
+// is opened with the specified flags (O_RDONLY etc.).
+// It is the responsibility of the user to provide sane flags and handle potential errors
+// resulting from inappropriate flag combinations or permissions.
+// Returns an error if the device node could not be opened or its properties failed to read.
+func OpenWithFlags(path string, flags int) (*InputDevice, error) {
 	d := &InputDevice{}
 
 	var err error
-	d.file, err = os.OpenFile(path, os.O_RDWR, 0)
+	d.file, err = os.OpenFile(path, flags, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -35,20 +38,38 @@ func Open(path string) (*InputDevice, error) {
 	return d, nil
 }
 
-// OpenByName creates a new InputDevice from the device name as reported by the kernel.
+// Open creates a new InputDevice from the given path. The input device is
+// opened with flag O_RDWR. Returns an error if the device node could not
+// be opened or its properties failed to read.
+func Open(path string) (*InputDevice, error) {
+	return OpenWithFlags(path, os.O_RDWR)
+}
+
+// OpenByNameWithFlags creates a new InputDevice from the device name as reported
+// by the kernel. The input device is opened with the specified flags (O_RDONLY etc.).
+// It is the responsibility of the user to provide sane flags and handle potential errors
+// resulting from inappropriate flag combinations or permissions.
 // Returns an error if the name does not exist, or the device node could
 // not be opened or its properties failed to read.
-func OpenByName(name string) (*InputDevice, error) {
+func OpenByNameWithFlags(name string, flags int) (*InputDevice, error) {
 	devices, err := ListDevicePaths()
 	if err != nil {
 		return nil, err
 	}
 	for _, d := range devices {
 		if d.Name == name {
-			return Open(d.Path)
+			return OpenWithFlags(d.Path, flags)
 		}
 	}
 	return nil, fmt.Errorf("could not find input device with name %q", name)
+}
+
+// OpenByName creates a new InputDevice from the device name as reported by the kernel.
+// The input device is opened with flag O_RDWR.
+// Returns an error if the name does not exist, or the device node could
+// not be opened or its properties failed to read.
+func OpenByName(name string) (*InputDevice, error) {
+	return OpenByNameWithFlags(name, os.O_RDWR)
 }
 
 // Close releases the resources held by an InputDevice. After calling this
