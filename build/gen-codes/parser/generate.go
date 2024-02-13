@@ -315,7 +315,9 @@ func GenerateFile(rawGroups []Group, disableComments bool, selectedTag, inputHUR
 	file += "\n//\n// Type from String\n//\n\n"
 	file += typeFromString
 
-	file += "\n//\n// Type Names (informative debug use only)\n//\n\n"
+	file += "\n//\n// Type Names, useful for information/debug use only.\n"
+	file += "// When one code has two or more string representations, all available aliases are provided seperated by a slash.\n"
+	file += "// Example: KEY_COFFEE: \"KEY_COFFEE/KEY_SCREENLOCK\"\n//\n\n"
 	file += typeNames
 
 	return file
