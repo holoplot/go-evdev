@@ -2,7 +2,6 @@ package evdev
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -19,7 +18,7 @@ func ListDevicePaths() ([]InputPath, error) {
 
 	basePath := "/dev/input"
 
-	files, err := ioutil.ReadDir(basePath)
+	files, err := os.ReadDir(basePath)
 	if err != nil {
 		return list, err
 	}
