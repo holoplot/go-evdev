@@ -74,13 +74,18 @@ type InputMask struct {
 	CodesPtr  uint64
 }
 
-// UinputUserDevice is used when creating or cloning a device
-type UinputUserDevice struct {
-	Name       [uinputMaxNameSize]byte
-	ID         InputID
+// UserDeviceAbsParams specifies the range (min/max), fuzz, and flat values for an absolute input.
+type UserDeviceAbsParams struct {
 	EffectsMax uint32
 	Absmax     [absSize]int32
 	Absmin     [absSize]int32
 	Absfuzz    [absSize]int32
 	Absflat    [absSize]int32
+}
+
+// UinputUserDevice is used when creating or cloning a device
+type UinputUserDevice struct {
+	Name                [uinputMaxNameSize]byte
+	ID                  InputID
+	UserDeviceAbsParams UserDeviceAbsParams
 }

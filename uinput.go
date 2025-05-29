@@ -17,6 +17,14 @@ const (
 // If set up fails the device will be removed from the system,
 // once set up it can be removed by calling dev.Close
 func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*InputDevice, error) {
+	return CreateDeviceWithAbsParams(name, id, capabilities, UserDeviceAbsParams{})
+}
+
+// CreateDeviceWithAbsParams creates a device from scratch with the specified name, identifiers,
+// capabilities, and a set of parameters for absolute inputs.
+// If setup fails, the device is removed from the system.
+// It can be closed manually using the dev.Close() method.
+func CreateDeviceWithAbsParams(name string, id InputID, capabilities map[EvType][]EvCode, absParams UserDeviceAbsParams) (*InputDevice, error) {
 	deviceFile, err := os.OpenFile("/dev/uinput", syscall.O_WRONLY|syscall.O_NONBLOCK, 0660)
 	if err != nil {
 		return nil, err
@@ -39,8 +47,9 @@ func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*I
 	}
 
 	if _, err = createInputDevice(newDev.file, UinputUserDevice{
-		Name: toUinputName([]byte(name)),
-		ID:   id,
+		Name:                toUinputName([]byte(name)),
+		ID:                  id,
+		UserDeviceAbsParams: absParams,
 	}); err != nil {
 		DestroyDevice(newDev)
 		return nil, fmt.Errorf("failed to create device: %w", err)
