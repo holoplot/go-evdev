@@ -1,6 +1,7 @@
 package evdev
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"os"
@@ -261,6 +262,33 @@ func (d *InputDevice) Revoke() error {
 // is not using any other method than ReadOne after NonBlock call.
 func (d *InputDevice) NonBlock() error {
 	return syscall.SetNonblock(int(d.file.Fd()), true)
+}
+
+// Read and returns a slice of InputEvents from the device.
+// It blocks until events has been received or an error has occurred.
+func (d *InputDevice) ReadSlice(eventSlice int) ([]InputEvent, error) {
+	buffer := make([]byte, eventsize*eventSlice)
+
+	bytesRead, err := d.file.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate how many complete events we actually got
+	count := bytesRead / eventsize
+	if count == 0 {
+		return nil, nil // no complete event in this read
+	}
+
+	// Create events slice dynamically
+	events := make([]InputEvent, count)
+
+	reader := bytes.NewReader(buffer[:bytesRead])
+	if err = binary.Read(reader, binary.LittleEndian, &events); err != nil {
+		return nil, err
+	}
+
+	return events, nil
 }
 
 // ReadOne reads one InputEvent from the device. It blocks until an event has

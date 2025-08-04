@@ -3,6 +3,7 @@ package evdev
 import (
 	"fmt"
 	"syscall"
+	"unsafe"
 )
 
 // EvType is EV_KEY, EV_SW, EV_LED, EV_SND, ...
@@ -39,6 +40,8 @@ func (e *InputEvent) String() string {
 		e.Type, e.TypeName(), e.Code, e.CodeName(), e.Value,
 	)
 }
+
+var eventsize = int(unsafe.Sizeof(InputEvent{}))
 
 // InputID ...
 type InputID struct {
