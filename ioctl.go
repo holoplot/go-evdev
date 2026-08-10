@@ -1,6 +1,7 @@
 package evdev
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"strings"
@@ -139,35 +140,44 @@ func ioctlEVIOCGSW(fd uintptr) ([]byte, error) {
 	return bits[:], err
 }
 
-func ioctlEVIOCGBIT(fd uintptr, evtype int) ([]byte, error) {
-	var cnt int
+func ioctlEVIOCSMASK(fd uintptr, mask InputMask) error {
+	code := ioctlMakeCode(ioctlDirWrite, 'E', 0x93, unsafe.Sizeof(mask))
+	return doIoctl(fd, code, unsafe.Pointer(&mask))
+}
 
-	switch evtype {
-	case 0:
+// count returns an upper bound on the number of distinct events in t. Userspace
+// version of evdev_get_mask_cnt from linux/drivers/input/evdev.c.
+func (t EvType) count() int {
+	switch t {
+	case EV_SYN: // == 0
 		// special case, indicating the list of all feature types supported should be returned,
 		// rather than the list of particular features for that type
-		cnt = EV_CNT
+		return EV_CNT
 	case EV_KEY:
-		cnt = KEY_CNT
+		return KEY_CNT
 	case EV_REL:
-		cnt = REL_CNT
+		return REL_CNT
 	case EV_ABS:
-		cnt = ABS_CNT
+		return ABS_CNT
 	case EV_MSC:
-		cnt = MSC_CNT
+		return MSC_CNT
 	case EV_SW:
-		cnt = SW_CNT
+		return SW_CNT
 	case EV_LED:
-		cnt = LED_CNT
+		return LED_CNT
 	case EV_SND:
-		cnt = SND_CNT
+		return SND_CNT
 	case EV_REP:
-		cnt = REP_CNT
+		return REP_CNT
 	case EV_FF:
-		cnt = FF_CNT
+		return FF_CNT
 	default: // EV_PWR, EV_FF_STATUS ??
-		cnt = KEY_MAX
+		return 0
 	}
+}
+
+func ioctlEVIOCGBIT(fd uintptr, evtype int) ([]byte, error) {
+	cnt := cmp.Or(EvType(evtype).count(), KEY_MAX) // TODO: handle truncation.
 
 	bytesNumber := (cnt + 7) / 8
 

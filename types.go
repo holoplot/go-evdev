@@ -2,6 +2,7 @@ package evdev
 
 import (
 	"fmt"
+	"structs"
 	"syscall"
 	"unsafe"
 )
@@ -70,8 +71,9 @@ type InputKeymapEntry struct {
 	ScanCode [32]uint8
 }
 
-// InputMask ...
+// InputMask is used for filtering events.
 type InputMask struct {
+	_         structs.HostLayout
 	Type      uint32
 	CodesSize uint32
 	CodesPtr  uint64

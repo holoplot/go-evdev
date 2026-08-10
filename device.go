@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"runtime"
 	"syscall"
+	"unsafe"
 )
 
 // InputDevice represent a Linux kernel input device in userspace.
@@ -217,6 +219,94 @@ func (d *InputDevice) State(t EvType) (StateMap, error) {
 	}
 
 	return st, nil
+}
+
+// SetMask masks the events in mask for the event type of the mask. Other event
+// types are unaffected. The filter is applied at the kernel level.
+//
+// If successful, SetMask overrides any previous mask set for the event type.
+//
+// Not every event type can be filtered (an example is EV_SYN). The kernel may
+// fail to filter events, always check the error.
+//
+// Usage examples (error checking omitted for brevity):
+//
+// Produce no key-press events:
+//
+//	evdev.SetMask(evdev.AllowMask(evdev.EV_KEY, nil))
+//
+// Only produce BTN_SOUTH and BTN_EAST (from EV_KEY) events.
+//
+//	evdev.SetMask(evdev.AllowMask(evdev.EV_KEY, evdev.EvCode{
+//	  evdev.BTN_SOUTH,
+//	  evdev.BTN_EAST,
+//	}))
+//
+// Produce all EV_KEY events except for BTN_NORTH:
+//
+//	evdev.SetMask(evdev.DenyMask(evdev.EV_KEY, evdev.EvCode{
+//	  evdev.BTN_NORTH,
+//	}))
+//
+// Only allow EV_KEY (by silencing all other event types):
+//
+//	for _, evtype := range dev.CapableTypes() {
+//		if evtype == evdev.EV_KEY || evtype == evdev.EV_SYN {
+//			continue // Don't silence EV_KEY, and EV_SYN can't be silenced.
+//		}
+//
+//		mask := evdev.AllowMask(evtype, nil) // Allow nothing.
+//		if err := dev.SetMask(mask); err != nil { ... }
+//	}
+//
+// NOTE: Unsetting a filter is not supported. The effect can be achieved by
+// passing evdev.DenyMask(evtype, nil), though it is not strictly the same due
+// to the kernel potentially knowing about more events. It is recommended to
+// close and re-open the [InputDevice] to reset.
+func (d *InputDevice) SetMask(mask Mask) error {
+	// EV_SYN cannot be filtered, don't even try (see __evdev_is_filtered in
+	// drivers/input/evdev.c).
+	if mask.typ == EV_SYN {
+		return fmt.Errorf("the kernel does not allow masking EV_SYN")
+	}
+	cnt := countForType(mask.typ)
+	if cnt == 0 {
+		return fmt.Errorf("could not size mask for unknown event type %d", mask.typ)
+	}
+
+	// Calculate required bytes for bitmask. The bitmask must be long (uintptr)
+	// sized, even when the bitmap itself would require fewer bytes.
+	//
+	// EVIOCSMASK passes this size as codes_size to the bits_from_user() in the
+	// kernel, which requires `codes_size % sizeof(long) == 0`.
+	const (
+		bytesPerWord = unsafe.Sizeof(uintptr(0))
+		bitsPerWord  = bytesPerWord * 8
+	)
+	words := (uintptr(cnt) + bitsPerWord - 1) / bitsPerWord
+	bits := newBitmap(make([]byte, words*bytesPerWord))
+
+	if mask.allow {
+		for _, code := range mask.codes {
+			bits.set(int(code))
+		}
+	} else {
+		bits.setAll()
+		for _, code := range mask.codes {
+			bits.clear(int(code))
+		}
+	}
+	// Ensure the GC does not collected the bitmask until _after_ the ioctl has
+	// returned. An alternative would be to make [CodesPtr] an [unsafe.Pointer],
+	// but that would not work well on 32-bit as the kernel still expects a 64-bit
+	// integer.
+	defer runtime.KeepAlive(bits.bits)
+
+	return ioctlEVIOCSMASK(d.file.Fd(), InputMask{
+		Type:      uint32(mask.typ),
+		CodesSize: uint32(len(bits.bits)),
+		CodesPtr:  uint64(uintptr(unsafe.Pointer(&bits.bits[0]))),
+	})
 }
 
 // AbsInfos returns the AbsInfo struct for all axis the device supports.
