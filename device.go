@@ -269,7 +269,7 @@ func (d *InputDevice) SetMask(mask Mask) error {
 	if mask.typ == EV_SYN {
 		return fmt.Errorf("the kernel does not allow masking EV_SYN")
 	}
-	cnt := countForType(mask.typ)
+	cnt := mask.typ.count()
 	if cnt == 0 {
 		return fmt.Errorf("could not size mask for unknown event type %d", mask.typ)
 	}
