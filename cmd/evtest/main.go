@@ -1,10 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/holoplot/go-evdev"
+	"github.com/holoplot/go-evdev/kbext"
 )
 
 func listDevices() {
@@ -18,18 +20,36 @@ func listDevices() {
 	}
 }
 
+func listLayouts() {
+	ids := kbext.LayoutKeys()
+	for _, d := range ids {
+		fmt.Println(d)
+	}
+}
+
+var (
+	kbLayoutStr string
+)
+
 func main() {
-	if len(os.Args) < 2 {
+	flag.StringVar(&kbLayoutStr, "kblayout", string(kbext.LayoutQuertyEnUs), "Keyboard layout")
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) < 1 {
 		fmt.Printf("Usage: %s <input device>\n\n", os.Args[0])
 		fmt.Printf("Available devices:\n")
 
 		listDevices()
+
+		fmt.Printf("\nAvailable keyboard layouts:\n")
+		listLayouts()
 		return
 	}
 
-	d, err := evdev.Open(os.Args[1])
+	d, err := evdev.Open(args[0])
 	if err != nil {
-		fmt.Printf("Cannot read %s: %v\n", os.Args[1], err)
+		fmt.Printf("Cannot read %s: %v\n", args[0], err)
 		return
 	}
 
@@ -104,7 +124,8 @@ func main() {
 		fmt.Printf("  Property type %d (%s)\n", p, evdev.PropName(p))
 	}
 
-	fmt.Printf("Testing ... (interrupt to exit)\n")
+	fmt.Printf("Testing (kb layout=%s)... (interrupt to exit)\n", kbLayoutStr)
+	kbState := kbext.NewKbState(kbext.LayoutID(kbLayoutStr))
 
 	for {
 		e, err := d.ReadOne()
@@ -124,6 +145,14 @@ func main() {
 				fmt.Printf("%s, >>>>>>>>>>>>>> %s <<<<<<<<<<<<\n", ts, e.CodeName())
 			default:
 				fmt.Printf("%s, -------------- %s ------------\n", ts, e.CodeName())
+			}
+		case evdev.EV_KEY:
+			kbevt := evdev.NewKeyEvent(e)
+			fmt.Printf("%s, %s\n", ts, kbevt.String())
+
+			pressed, err := kbState.KeyEvent(kbevt)
+			if err == nil {
+				fmt.Printf("  kb char: %s\n", pressed)
 			}
 		default:
 			fmt.Printf("%s, %s\n", ts, e.String())
