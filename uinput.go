@@ -17,6 +17,21 @@ const (
 // If set up fails the device will be removed from the system,
 // once set up it can be removed by calling dev.Close
 func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*InputDevice, error) {
+	return CreateDeviceWithOptions(name, id, capabilities, CreateDeviceOptions{})
+}
+
+type CreateDeviceOptions struct {
+	Absmax  *[absSize]int32
+	Absmin  *[absSize]int32
+	Absfuzz *[absSize]int32
+	Absflat *[absSize]int32
+}
+
+// CreateDeviceWithOptions creates a device from scratch with the provided capabilities and name
+// If set up fails the device will be removed from the system,
+// once set up it can be removed by calling dev.Close
+// options can be used to set extra properties liek Absmax and Absmin
+func CreateDeviceWithOptions(name string, id InputID, capabilities map[EvType][]EvCode, options CreateDeviceOptions) (*InputDevice, error) {
 	deviceFile, err := os.OpenFile("/dev/uinput", syscall.O_WRONLY|syscall.O_NONBLOCK, 0660)
 	if err != nil {
 		return nil, err
@@ -38,10 +53,24 @@ func CreateDevice(name string, id InputID, capabilities map[EvType][]EvCode) (*I
 		}
 	}
 
-	if _, err = createInputDevice(newDev.file, UinputUserDevice{
+	uinputUserDevice := UinputUserDevice{
 		Name: toUinputName([]byte(name)),
 		ID:   id,
-	}); err != nil {
+	}
+	if options.Absmin != nil {
+		uinputUserDevice.Absmin = *options.Absmin
+	}
+	if options.Absmax != nil {
+		uinputUserDevice.Absmax = *options.Absmax
+	}
+	if options.Absfuzz != nil {
+		uinputUserDevice.Absfuzz = *options.Absfuzz
+	}
+	if options.Absflat != nil {
+		uinputUserDevice.Absflat = *options.Absflat
+	}
+
+	if _, err = createInputDevice(newDev.file, uinputUserDevice); err != nil {
 		DestroyDevice(newDev)
 		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
